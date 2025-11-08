@@ -5,31 +5,122 @@ let currentStudents = [];
 document.addEventListener('DOMContentLoaded', function() {
     loadStudents();
     
+    // Create toast container
+    const toastContainer = document.createElement('div');
+    toastContainer.className = 'toast-container';
+    toastContainer.id = 'toastContainer';
+    document.body.appendChild(toastContainer);
+    
     // Add student form submit
     document.getElementById('addStudentForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        clearFormErrors('addStudentForm');
         addStudent();
     });
     
     // Edit student form submit
     document.getElementById('editStudentForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        clearFormErrors('editStudentForm');
         updateStudent();
     });
 });
 
-// Show message
-function showMessage(message, type) {
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `message ${type}`;
-    messageDiv.textContent = message;
+// Show toast notification
+function showToast(message, type = 'info', title = null) {
+    const toastContainer = document.getElementById('toastContainer');
     
-    const container = document.querySelector('.container');
-    container.insertBefore(messageDiv, container.firstChild);
+    // Set default titles based on type
+    if (!title) {
+        const titles = {
+            success: '✓ Success',
+            error: '✗ Error',
+            info: 'ℹ Information',
+            warning: '⚠ Warning'
+        };
+        title = titles[type] || 'Notification';
+    }
     
+    // Get icon based on type
+    const icons = {
+        success: '✓',
+        error: '✗',
+        info: 'ℹ',
+        warning: '⚠'
+    };
+    
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type]}</div>
+        <div class="toast-content">
+            <div class="toast-title">${title}</div>
+            <div class="toast-message">${message}</div>
+        </div>
+        <button class="toast-close" onclick="this.parentElement.remove()">×</button>
+    `;
+    
+    toastContainer.appendChild(toast);
+    
+    // Auto remove after 5 seconds
     setTimeout(() => {
-        messageDiv.remove();
-    }, 3000);
+        toast.classList.add('removing');
+        setTimeout(() => toast.remove(), 300);
+    }, 5000);
+}
+
+// Show inline field error
+function showFieldError(formId, fieldName, errorMessage) {
+    const form = document.getElementById(formId);
+    const input = form.querySelector(`#${fieldName}`);
+    
+    if (!input) return;
+    
+    const formGroup = input.closest('.form-group');
+    formGroup.classList.add('has-error');
+    
+    // Remove existing error message
+    const existingError = formGroup.querySelector('.field-error');
+    if (existingError) {
+        existingError.remove();
+    }
+    
+    // Add new error message
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'field-error';
+    errorDiv.textContent = errorMessage;
+    formGroup.appendChild(errorDiv);
+}
+
+// Clear all form errors
+function clearFormErrors(formId) {
+    const form = document.getElementById(formId);
+    const errorGroups = form.querySelectorAll('.form-group.has-error');
+    
+    errorGroups.forEach(group => {
+        group.classList.remove('has-error');
+        const errorMsg = group.querySelector('.field-error');
+        if (errorMsg) errorMsg.remove();
+    });
+}
+
+// Handle validation errors
+function handleValidationErrors(errors, formId) {
+    let errorCount = 0;
+    const errorMessages = [];
+    
+    for (const [field, message] of Object.entries(errors)) {
+        errorCount++;
+        errorMessages.push(`${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`);
+        showFieldError(formId, field, message);
+    }
+    
+    // Show toast with summary
+    if (errorCount === 1) {
+        showToast(errorMessages[0], 'error', 'Validation Error');
+    } else {
+        showToast(`Please fix ${errorCount} validation errors in the form`, 'error', 'Validation Failed');
+    }
 }
 
 // Load all students
@@ -49,7 +140,7 @@ async function loadStudents() {
         document.getElementById('searchCourse').value = '';
         document.getElementById('sortField').value = '';
     } catch (error) {
-        showMessage('Error loading students: Unable to connect to server', 'error');
+        showToast('Unable to connect to server. Please check your connection.', 'error', 'Connection Error');
         displayStudents([]);
         updateStudentCount(0);
     }
@@ -163,26 +254,25 @@ async function addStudent() {
         });
         
         if (response.ok) {
-            showMessage('Student added successfully!', 'success');
+            showToast(`${name} has been added successfully!`, 'success', 'Student Added');
             document.getElementById('addStudentForm').reset();
+            clearFormErrors('addStudentForm');
             loadStudents();
         } else {
             const error = await response.json();
             if (error.errors) {
                 // Handle validation errors (field-specific)
-                const errorMessages = Object.entries(error.errors)
-                    .map(([field, message]) => `${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`)
-                    .join('; ');
-                showMessage(errorMessages, 'error');
+                handleValidationErrors(error.errors, 'addStudentForm');
             } else if (response.status === 409) {
                 // Handle duplicate email (conflict)
-                showMessage(error.message || 'Email already exists. Please use a different email address.', 'error');
+                showFieldError('addStudentForm', 'email', 'This email is already registered');
+                showToast(error.message || 'Email already exists. Please use a different email address.', 'error', 'Duplicate Email');
             } else {
-                showMessage(error.message || 'Failed to add student', 'error');
+                showToast(error.message || 'Failed to add student', 'error', 'Error');
             }
         }
     } catch (error) {
-        showMessage('Network error: Unable to connect to server', 'error');
+        showToast('Unable to connect to server. Please check your connection.', 'error', 'Network Error');
     }
 }
 
@@ -198,7 +288,7 @@ async function searchStudents() {
     const course = document.getElementById('searchCourse').value.trim();
     
     if (!name && !course) {
-        showMessage('Please enter a search term', 'error');
+        showToast('Please enter a name or course to search', 'warning', 'Search Required');
         return;
     }
     
@@ -217,10 +307,12 @@ async function searchStudents() {
         updateStudentCount(students.length);
         
         if (students.length === 0) {
-            showMessage('No students found matching your search', 'info');
+            showToast('No students found matching your search criteria', 'info', 'No Results');
+        } else {
+            showToast(`Found ${students.length} student${students.length !== 1 ? 's' : ''}`, 'success', 'Search Complete');
         }
     } catch (error) {
-        showMessage('Error searching students: Unable to connect to server', 'error');
+        showToast('Unable to connect to server. Please check your connection.', 'error', 'Search Error');
     }
 }
 
@@ -260,7 +352,7 @@ async function openEditModal(id) {
         const response = await fetch(`${API_URL}/${id}`);
         if (!response.ok) {
             if (response.status === 404) {
-                showMessage('Error: Student not found', 'error');
+                showToast('Student not found. The record may have been deleted.', 'error', 'Not Found');
                 loadStudents();
                 return;
             }
@@ -276,7 +368,7 @@ async function openEditModal(id) {
         
         document.getElementById('editModal').style.display = 'block';
     } catch (error) {
-        showMessage('Error loading student: Unable to connect to server', 'error');
+        showToast('Unable to load student data. Please try again.', 'error', 'Load Error');
     }
 }
 
@@ -294,28 +386,33 @@ async function updateStudent() {
     const age = document.getElementById('editAge').value;
     
     // Client-side validation
+    let hasError = false;
+    
     if (!name) {
-        showMessage('Name is required', 'error');
-        return;
+        showFieldError('editStudentForm', 'editName', 'Name is required');
+        hasError = true;
     }
     
     if (!email) {
-        showMessage('Email is required', 'error');
-        return;
-    }
-    
-    if (!validateEmail(email)) {
-        showMessage('Please enter a valid email address', 'error');
-        return;
+        showFieldError('editStudentForm', 'editEmail', 'Email is required');
+        hasError = true;
+    } else if (!validateEmail(email)) {
+        showFieldError('editStudentForm', 'editEmail', 'Please enter a valid email address');
+        hasError = true;
     }
     
     if (!course) {
-        showMessage('Course is required', 'error');
-        return;
+        showFieldError('editStudentForm', 'editCourse', 'Course is required');
+        hasError = true;
     }
     
     if (!age || age <= 18) {
-        showMessage('Age must be greater than 18', 'error');
+        showFieldError('editStudentForm', 'editAge', 'Age must be greater than 18');
+        hasError = true;
+    }
+    
+    if (hasError) {
+        showToast('Please fill in all required fields correctly', 'error', 'Validation Error');
         return;
     }
     
@@ -336,26 +433,28 @@ async function updateStudent() {
         });
         
         if (response.ok) {
-            showMessage('Student updated successfully!', 'success');
+            showToast(`${name}'s information has been updated successfully!`, 'success', 'Student Updated');
             closeEditModal();
             loadStudents();
         } else {
             const error = await response.json();
             if (error.errors) {
                 // Handle validation errors (field-specific)
-                const errorMessages = Object.entries(error.errors)
-                    .map(([field, message]) => `${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`)
-                    .join('; ');
-                showMessage(errorMessages, 'error');
+                const mappedErrors = {};
+                for (const [field, message] of Object.entries(error.errors)) {
+                    mappedErrors['edit' + field.charAt(0).toUpperCase() + field.slice(1)] = message;
+                }
+                handleValidationErrors(mappedErrors, 'editStudentForm');
             } else if (response.status === 409) {
                 // Handle duplicate email (conflict)
-                showMessage(error.message || 'Email already exists. Please use a different email address.', 'error');
+                showFieldError('editStudentForm', 'editEmail', 'This email is already registered');
+                showToast(error.message || 'Email already exists. Please use a different email address.', 'error', 'Duplicate Email');
             } else {
-                showMessage(error.message || 'Failed to update student', 'error');
+                showToast(error.message || 'Failed to update student', 'error', 'Update Error');
             }
         }
     } catch (error) {
-        showMessage('Network error: Unable to connect to server', 'error');
+        showToast('Unable to connect to server. Please check your connection.', 'error', 'Network Error');
     }
 }
 
@@ -371,17 +470,17 @@ async function deleteStudent(id) {
         });
         
         if (response.ok) {
-            showMessage('Student deleted successfully!', 'success');
+            showToast('Student has been deleted successfully', 'success', 'Student Deleted');
             loadStudents();
         } else if (response.status === 404) {
-            showMessage('Error: Student not found', 'error');
+            showToast('Student not found. The record may have already been deleted.', 'error', 'Not Found');
             loadStudents();
         } else {
             const error = await response.json();
-            showMessage('Error: ' + (error.message || 'Failed to delete student'), 'error');
+            showToast(error.message || 'Failed to delete student', 'error', 'Delete Error');
         }
     } catch (error) {
-        showMessage('Network error: Unable to connect to server', 'error');
+        showToast('Unable to connect to server. Please check your connection.', 'error', 'Network Error');
     }
 }
 
