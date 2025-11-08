@@ -39,6 +39,44 @@ body {
     flex: 1;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 20px;
+}
+
+.swagger-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #85c440, #6fa832);
+    color: white;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.95em;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(133, 196, 64, 0.3);
+    border: 2px solid transparent;
+}
+
+.swagger-btn:hover {
+    background: linear-gradient(135deg, #6fa832, #5a8a28);
+    box-shadow: 0 4px 12px rgba(133, 196, 64, 0.4);
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.swagger-btn svg {
+    flex-shrink: 0;
+}
+
+.swagger-btn span {
+    white-space: nowrap;
+}
+
 .university-name {
     font-size: 1.75em;
     font-weight: 700;
@@ -736,6 +774,13 @@ h2::after {
         gap: 20px;
     }
     
+    .header-actions {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+        margin: 0;
+    }
+    
     .student-info {
         width: 100%;
         min-width: auto;
@@ -768,6 +813,17 @@ h2::after {
     
     .department-name {
         font-size: 0.9em;
+    }
+    
+    .header-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .swagger-btn {
+        width: 100%;
+        max-width: 300px;
+        justify-content: center;
     }
     
     .student-info {
