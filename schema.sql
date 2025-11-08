@@ -1,0 +1,7 @@
+CREATE TABLE IF NOT EXISTS students (
+    id BIGSERIAL PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    course VARCHAR(255) NOT NULL,
+    age INT NOT NULL CHECK (age > 18)
+);
