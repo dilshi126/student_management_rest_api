@@ -210,16 +210,62 @@ The API returns proper HTTP status codes:
 - `200 OK` - Successful GET/PUT
 - `201 CREATED` - Successful POST
 - `204 NO CONTENT` - Successful DELETE
-- `400 BAD REQUEST` - Validation errors
+- `400 BAD REQUEST` - Validation errors (invalid format, missing fields)
 - `404 NOT FOUND` - Resource not found
+- `409 CONFLICT` - Duplicate email address
 - `500 INTERNAL SERVER ERROR` - Server errors
+
+### Error Response Format
+
+**Validation Errors (400):**
+```json
+{
+  "timestamp": "2024-11-08T10:30:00",
+  "status": 400,
+  "error": "Validation Failed",
+  "errors": {
+    "email": "Email should be valid",
+    "age": "Age must be greater than 18"
+  },
+  "path": "/api/students"
+}
+```
+
+**Duplicate Email (409):**
+```json
+{
+  "timestamp": "2024-11-08T10:30:00",
+  "status": 409,
+  "error": "Duplicate Email",
+  "message": "Email already exists: john@example.com",
+  "path": "/api/students"
+}
+```
+
+**Resource Not Found (404):**
+```json
+{
+  "timestamp": "2024-11-08T10:30:00",
+  "status": 404,
+  "error": "Not Found",
+  "message": "Student not found with id: 1",
+  "path": "/api/students/1"
+}
+```
 
 ## Validation Rules
 
-- Name: Cannot be blank
-- Email: Must be valid email format, cannot be blank
-- Course: Cannot be blank
-- Age: Must be greater than 18
+- **Name**: Cannot be blank
+  - Error: "Name is required"
+- **Email**: Must be valid email format, cannot be blank, must be unique
+  - Error: "Email is required"
+  - Error: "Email should be valid"
+  - Error: "Email already exists: [email]" (409 Conflict)
+- **Course**: Cannot be blank
+  - Error: "Course is required"
+- **Age**: Must be greater than 18
+  - Error: "Age is required"
+  - Error: "Age must be greater than 18"
 
 ## Project Structure
 

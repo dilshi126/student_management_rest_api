@@ -1,3 +1,4 @@
+/Users/ceydigitalsolutions/student_management_rest_api/src/main/java/com/studentmanagement/exception/DuplicateEmailException.java
 /Users/ceydigitalsolutions/student_management_rest_api/src/main/java/com/studentmanagement/config/WebConfig.java
 /Users/ceydigitalsolutions/student_management_rest_api/src/main/java/com/studentmanagement/StudentManagementApplication.java
 /Users/ceydigitalsolutions/student_management_rest_api/src/main/java/com/studentmanagement/service/StudentService.java
