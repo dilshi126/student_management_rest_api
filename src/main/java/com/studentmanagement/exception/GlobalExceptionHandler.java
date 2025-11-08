@@ -1,5 +1,6 @@
 package com.studentmanagement.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -26,6 +27,39 @@ public class GlobalExceptionHandler {
                 request.getDescription(false).replace("uri=", "")
         );
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+    }
+    
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateEmailException(
+            DuplicateEmailException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Duplicate Email",
+                ex.getMessage(),
+                request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+    
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrityViolationException(
+            DataIntegrityViolationException ex, WebRequest request) {
+        String message = "Data integrity violation";
+        
+        // Check if it's a unique constraint violation for email
+        if (ex.getMessage() != null && ex.getMessage().toLowerCase().contains("email")) {
+            message = "Email already exists. Please use a different email address.";
+        }
+        
+        ErrorResponse errorResponse = new ErrorResponse(
+                LocalDateTime.now(),
+                HttpStatus.CONFLICT.value(),
+                "Constraint Violation",
+                message,
+                request.getDescription(false).replace("uri=", "")
+        );
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
     }
     
     @ExceptionHandler(MethodArgumentNotValidException.class)

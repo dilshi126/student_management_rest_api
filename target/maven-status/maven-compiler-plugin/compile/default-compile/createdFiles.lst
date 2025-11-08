@@ -3,6 +3,7 @@ com/studentmanagement/exception/ErrorResponse.class
 com/studentmanagement/config/WebConfig.class
 com/studentmanagement/exception/ResourceNotFoundException.class
 com/studentmanagement/controller/StudentController.class
+com/studentmanagement/exception/DuplicateEmailException.class
 com/studentmanagement/exception/GlobalExceptionHandler.class
 com/studentmanagement/service/StudentService.class
 com/studentmanagement/repository/StudentRepository.class

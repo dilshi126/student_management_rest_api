@@ -169,13 +169,16 @@ async function addStudent() {
         } else {
             const error = await response.json();
             if (error.errors) {
-                // Handle validation errors
+                // Handle validation errors (field-specific)
                 const errorMessages = Object.entries(error.errors)
-                    .map(([field, message]) => `${field}: ${message}`)
-                    .join(', ');
-                showMessage('Validation Error: ' + errorMessages, 'error');
+                    .map(([field, message]) => `${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`)
+                    .join('; ');
+                showMessage(errorMessages, 'error');
+            } else if (response.status === 409) {
+                // Handle duplicate email (conflict)
+                showMessage(error.message || 'Email already exists. Please use a different email address.', 'error');
             } else {
-                showMessage('Error: ' + (error.message || 'Failed to add student'), 'error');
+                showMessage(error.message || 'Failed to add student', 'error');
             }
         }
     } catch (error) {
@@ -339,13 +342,16 @@ async function updateStudent() {
         } else {
             const error = await response.json();
             if (error.errors) {
-                // Handle validation errors
+                // Handle validation errors (field-specific)
                 const errorMessages = Object.entries(error.errors)
-                    .map(([field, message]) => `${field}: ${message}`)
-                    .join(', ');
-                showMessage('Validation Error: ' + errorMessages, 'error');
+                    .map(([field, message]) => `${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`)
+                    .join('; ');
+                showMessage(errorMessages, 'error');
+            } else if (response.status === 409) {
+                // Handle duplicate email (conflict)
+                showMessage(error.message || 'Email already exists. Please use a different email address.', 'error');
             } else {
-                showMessage('Error: ' + (error.message || 'Failed to update student'), 'error');
+                showMessage(error.message || 'Failed to update student', 'error');
             }
         }
     } catch (error) {
