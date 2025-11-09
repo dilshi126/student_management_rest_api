@@ -84,7 +84,10 @@
         <div class="card">
             <div class="list-header">
                 <h2>Students List</h2>
-                <div class="student-count" id="studentCount">0 students</div>
+                <div class="header-right">
+                    <button onclick="togglePagination()" class="btn btn-toggle" id="paginationToggle">Disable Pagination</button>
+                    <div class="student-count" id="studentCount">0 students</div>
+                </div>
             </div>
             
             <!-- Search and Filter Controls -->
@@ -113,6 +116,9 @@
             </div>
             
             <div id="studentsList"></div>
+            
+            <!-- Pagination -->
+            <div id="paginationContainer"></div>
         </div>
 
         <!-- Edit Modal -->
@@ -146,6 +152,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=3.0"></script>
 </body>
 </html>
