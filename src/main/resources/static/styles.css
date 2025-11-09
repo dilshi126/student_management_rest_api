@@ -206,6 +206,14 @@ h2::after {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 25px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 15px;
 }
 
 .student-count {
@@ -216,6 +224,25 @@ h2::after {
     font-weight: 600;
     font-size: 0.95em;
     box-shadow: 0 2px 8px rgba(52, 152, 219, 0.3);
+}
+
+.btn-toggle {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+    box-shadow: 0 2px 6px rgba(155, 89, 182, 0.3);
+}
+
+.btn-toggle:hover {
+    background: linear-gradient(135deg, #8e44ad, #7d3c98);
+    box-shadow: 0 4px 12px rgba(155, 89, 182, 0.4);
+    transform: translateY(-1px);
 }
 
 .controls-section {
@@ -868,5 +895,127 @@ h2::after {
     
     .toast {
         min-width: auto;
+    }
+    
+    .header-right {
+        width: 100%;
+        justify-content: space-between;
+    }
+}
+
+/* Pagination Styles */
+.pagination {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 25px;
+    padding: 25px 35px;
+    background: linear-gradient(to bottom, #f8f9fa 0%, #ffffff 100%);
+}
+
+.pagination-numbers {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.pagination-btn {
+    padding: 10px 16px;
+    border: 2px solid #e1e8ed;
+    background: white;
+    color: #2c3e50;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.25s ease;
+    min-width: 44px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.pagination-btn:hover:not(:disabled) {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border-color: #3498db;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(52, 152, 219, 0.35);
+}
+
+.pagination-btn.active {
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    border-color: #2980b9;
+    box-shadow: 0 3px 10px rgba(52, 152, 219, 0.4);
+    transform: scale(1.05);
+}
+
+.pagination-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    background: #f5f7fa;
+    border-color: #e1e8ed;
+}
+
+.pagination-ellipsis {
+    padding: 10px 8px;
+    color: #95a5a6;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.page-size-selector {
+    padding: 11px 16px;
+    border: 2px solid #e1e8ed;
+    border-radius: 8px;
+    background: white;
+    color: #2c3e50;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.page-size-selector:hover {
+    border-color: #3498db;
+    box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.page-size-selector:focus {
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 4px rgba(52, 152, 219, 0.15);
+}
+
+#paginationContainer {
+    border-top: 2px solid #e1e8ed;
+    margin-top: 20px;
+    margin-left: -35px;
+    margin-right: -35px;
+    margin-bottom: -35px;
+}
+
+@media (max-width: 768px) {
+    .pagination {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        padding: 20px;
+    }
+    
+    .pagination-numbers {
+        order: 2;
+    }
+    
+    .pagination-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+        min-width: 38px;
+    }
+    
+    .page-size-selector {
+        width: 100%;
+        text-align: center;
     }
 }
