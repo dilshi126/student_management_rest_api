@@ -69,8 +69,17 @@ public class StudentController {
             @RequestParam(defaultValue = "asc") String sortDir) {
         
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
+        // Use case-insensitive sorting for string fields
+        Sort sort;
+        if (sortBy.equals("name") || sortBy.equals("email") || sortBy.equals("course")) {
+            Sort.Order order = new Sort.Order(direction, sortBy).ignoreCase();
+            sort = Sort.by(order);
+        } else {
+            sort = Sort.by(direction, sortBy);
+        }
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<Student> studentPage = studentService.getStudentsPaginated(pageable);
         
         Map<String, Object> response = new HashMap<>();
@@ -95,8 +104,17 @@ public class StudentController {
             @RequestParam(defaultValue = "asc") String sortDir) {
         
         Sort.Direction direction = sortDir.equalsIgnoreCase("desc") ? Sort.Direction.DESC : Sort.Direction.ASC;
-        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         
+        // Use case-insensitive sorting for string fields
+        Sort sort;
+        if (sortBy.equals("name") || sortBy.equals("email") || sortBy.equals("course")) {
+            Sort.Order order = new Sort.Order(direction, sortBy).ignoreCase();
+            sort = Sort.by(order);
+        } else {
+            sort = Sort.by(direction, sortBy);
+        }
+        
+        Pageable pageable = PageRequest.of(page, size, sort);
         Page<Student> studentPage = studentService.searchStudentsPaginated(name, course, pageable);
         
         Map<String, Object> response = new HashMap<>();
