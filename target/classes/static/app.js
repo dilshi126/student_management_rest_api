@@ -1,25 +1,30 @@
-const API_URL = 'http://localhost:8080/api/students';
+// Use relative URL so it works with both localhost and ngrok
+const API_URL = '/api/students';
 let currentStudents = [];
+let currentPage = 0;
+let pageSize = 10;
+let totalPages = 0;
+let usePagination = true;
 
 // Load students on page load
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     loadStudents();
-    
+
     // Create toast container
     const toastContainer = document.createElement('div');
     toastContainer.className = 'toast-container';
     toastContainer.id = 'toastContainer';
     document.body.appendChild(toastContainer);
-    
+
     // Add student form submit
-    document.getElementById('addStudentForm').addEventListener('submit', function(e) {
+    document.getElementById('addStudentForm').addEventListener('submit', function (e) {
         e.preventDefault();
         clearFormErrors('addStudentForm');
         addStudent();
     });
-    
+
     // Edit student form submit
-    document.getElementById('editStudentForm').addEventListener('submit', function(e) {
+    document.getElementById('editStudentForm').addEventListener('submit', function (e) {
         e.preventDefault();
         clearFormErrors('editStudentForm');
         updateStudent();
@@ -29,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // Show toast notification
 function showToast(message, type = 'info', title = null) {
     const toastContainer = document.getElementById('toastContainer');
-    
+
     // Set default titles based on type
     if (!title) {
         const titles = {
@@ -40,7 +45,7 @@ function showToast(message, type = 'info', title = null) {
         };
         title = titles[type] || 'Notification';
     }
-    
+
     // Get icon based on type
     const icons = {
         success: '✓',
@@ -48,7 +53,7 @@ function showToast(message, type = 'info', title = null) {
         info: 'ℹ',
         warning: '⚠'
     };
-    
+
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
     toast.innerHTML = `
@@ -59,9 +64,9 @@ function showToast(message, type = 'info', title = null) {
         </div>
         <button class="toast-close" onclick="this.parentElement.remove()">×</button>
     `;
-    
+
     toastContainer.appendChild(toast);
-    
+
     // Auto remove after 5 seconds
     setTimeout(() => {
         toast.classList.add('removing');
@@ -73,18 +78,18 @@ function showToast(message, type = 'info', title = null) {
 function showFieldError(formId, fieldName, errorMessage) {
     const form = document.getElementById(formId);
     const input = form.querySelector(`#${fieldName}`);
-    
+
     if (!input) return;
-    
+
     const formGroup = input.closest('.form-group');
     formGroup.classList.add('has-error');
-    
+
     // Remove existing error message
     const existingError = formGroup.querySelector('.field-error');
     if (existingError) {
         existingError.remove();
     }
-    
+
     // Add new error message
     const errorDiv = document.createElement('div');
     errorDiv.className = 'field-error';
@@ -96,7 +101,7 @@ function showFieldError(formId, fieldName, errorMessage) {
 function clearFormErrors(formId) {
     const form = document.getElementById(formId);
     const errorGroups = form.querySelectorAll('.form-group.has-error');
-    
+
     errorGroups.forEach(group => {
         group.classList.remove('has-error');
         const errorMsg = group.querySelector('.field-error');
@@ -108,13 +113,13 @@ function clearFormErrors(formId) {
 function handleValidationErrors(errors, formId) {
     let errorCount = 0;
     const errorMessages = [];
-    
+
     for (const [field, message] of Object.entries(errors)) {
         errorCount++;
         errorMessages.push(`${field.charAt(0).toUpperCase() + field.slice(1)}: ${message}`);
         showFieldError(formId, field, message);
     }
-    
+
     // Show toast with summary
     if (errorCount === 1) {
         showToast(errorMessages[0], 'error', 'Validation Error');
@@ -124,21 +129,40 @@ function handleValidationErrors(errors, formId) {
 }
 
 // Load all students
-async function loadStudents() {
+async function loadStudents(page = 0) {
     try {
-        const response = await fetch(API_URL);
+        let url;
+        if (usePagination) {
+            const sortField = document.getElementById('sortField')?.value || 'id';
+            const sortOrder = document.getElementById('sortOrder')?.value || 'asc';
+            url = `${API_URL}/paginated?page=${page}&size=${pageSize}&sortBy=${sortField}&sortDir=${sortOrder}`;
+        } else {
+            url = API_URL;
+        }
+
+        const response = await fetch(url);
         if (!response.ok) {
             throw new Error('Failed to load students');
         }
-        const students = await response.json();
-        currentStudents = students;
-        displayStudents(students);
-        updateStudentCount(students.length);
-        
+
+        if (usePagination) {
+            const data = await response.json();
+            currentStudents = data.students;
+            currentPage = data.currentPage;
+            totalPages = data.totalPages;
+            displayStudents(data.students);
+            updateStudentCount(data.totalItems);
+            updatePagination(data);
+        } else {
+            const students = await response.json();
+            currentStudents = students;
+            displayStudents(students);
+            updateStudentCount(students.length);
+        }
+
         // Clear search fields
         document.getElementById('searchName').value = '';
         document.getElementById('searchCourse').value = '';
-        document.getElementById('sortField').value = '';
     } catch (error) {
         showToast('Unable to connect to server. Please check your connection.', 'error', 'Connection Error');
         displayStudents([]);
@@ -155,12 +179,12 @@ function updateStudentCount(count) {
 // Display students
 function displayStudents(students) {
     const studentsList = document.getElementById('studentsList');
-    
+
     if (students.length === 0) {
         studentsList.innerHTML = '<div class="empty-state">No students found</div>';
         return;
     }
-    
+
     studentsList.innerHTML = `
         <div class="table-container">
             <table class="students-table">
@@ -210,40 +234,40 @@ async function addStudent() {
     const email = document.getElementById('email').value.trim();
     const course = document.getElementById('course').value.trim();
     const age = document.getElementById('age').value;
-    
+
     // Client-side validation
     if (!name) {
         showMessage('Name is required', 'error');
         return;
     }
-    
+
     if (!email) {
         showMessage('Email is required', 'error');
         return;
     }
-    
+
     if (!validateEmail(email)) {
         showMessage('Please enter a valid email address', 'error');
         return;
     }
-    
+
     if (!course) {
         showMessage('Course is required', 'error');
         return;
     }
-    
+
     if (!age || age <= 18) {
         showMessage('Age must be greater than 18', 'error');
         return;
     }
-    
+
     const student = {
         name: name,
         email: email,
         course: course,
         age: parseInt(age)
     };
-    
+
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
@@ -252,7 +276,7 @@ async function addStudent() {
             },
             body: JSON.stringify(student)
         });
-        
+
         if (response.ok) {
             showToast(`${name} has been added successfully!`, 'success', 'Student Added');
             document.getElementById('addStudentForm').reset();
@@ -283,33 +307,59 @@ function validateEmail(email) {
 }
 
 // Search students
-async function searchStudents() {
+async function searchStudents(page = 0) {
     const name = document.getElementById('searchName').value.trim();
     const course = document.getElementById('searchCourse').value.trim();
-    
+
     if (!name && !course) {
         showToast('Please enter a name or course to search', 'warning', 'Search Required');
         return;
     }
-    
-    let url = `${API_URL}/search?`;
-    if (name) url += `name=${encodeURIComponent(name)}&`;
-    if (course) url += `course=${encodeURIComponent(course)}`;
-    
+
     try {
+        let url;
+        if (usePagination) {
+            const sortField = document.getElementById('sortField')?.value || 'id';
+            const sortOrder = document.getElementById('sortOrder')?.value || 'asc';
+            url = `${API_URL}/paginated/search?page=${page}&size=${pageSize}&sortBy=${sortField}&sortDir=${sortOrder}`;
+            if (name) url += `&name=${encodeURIComponent(name)}`;
+            if (course) url += `&course=${encodeURIComponent(course)}`;
+        } else {
+            url = `${API_URL}/search?`;
+            if (name) url += `name=${encodeURIComponent(name)}&`;
+            if (course) url += `course=${encodeURIComponent(course)}`;
+        }
+
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error('Search failed');
         }
-        const students = await response.json();
-        currentStudents = students;
-        displayStudents(students);
-        updateStudentCount(students.length);
-        
-        if (students.length === 0) {
-            showToast('No students found matching your search criteria', 'info', 'No Results');
+
+        if (usePagination) {
+            const data = await response.json();
+            currentStudents = data.students;
+            currentPage = data.currentPage;
+            totalPages = data.totalPages;
+            displayStudents(data.students);
+            updateStudentCount(data.totalItems);
+            updatePagination(data);
+
+            if (data.totalItems === 0) {
+                showToast('No students found matching your search criteria', 'info', 'No Results');
+            } else {
+                showToast(`Found ${data.totalItems} student${data.totalItems !== 1 ? 's' : ''}`, 'success', 'Search Complete');
+            }
         } else {
-            showToast(`Found ${students.length} student${students.length !== 1 ? 's' : ''}`, 'success', 'Search Complete');
+            const students = await response.json();
+            currentStudents = students;
+            displayStudents(students);
+            updateStudentCount(students.length);
+
+            if (students.length === 0) {
+                showToast('No students found matching your search criteria', 'info', 'No Results');
+            } else {
+                showToast(`Found ${students.length} student${students.length !== 1 ? 's' : ''}`, 'success', 'Search Complete');
+            }
         }
     } catch (error) {
         showToast('Unable to connect to server. Please check your connection.', 'error', 'Search Error');
@@ -318,32 +368,45 @@ async function searchStudents() {
 
 // Sort students
 function sortStudents() {
-    const sortField = document.getElementById('sortField').value;
-    const sortOrder = document.getElementById('sortOrder').value;
-    
-    if (!sortField) {
-        displayStudents(currentStudents);
-        return;
-    }
-    
-    const sortedStudents = [...currentStudents].sort((a, b) => {
-        let aValue = a[sortField];
-        let bValue = b[sortField];
-        
-        // Handle string comparison
-        if (typeof aValue === 'string') {
-            aValue = aValue.toLowerCase();
-            bValue = bValue.toLowerCase();
-        }
-        
-        if (sortOrder === 'asc') {
-            return aValue > bValue ? 1 : -1;
+    if (usePagination) {
+        // Reload with new sort parameters
+        const name = document.getElementById('searchName').value.trim();
+        const course = document.getElementById('searchCourse').value.trim();
+
+        if (name || course) {
+            searchStudents(0);
         } else {
-            return aValue < bValue ? 1 : -1;
+            loadStudents(0);
         }
-    });
-    
-    displayStudents(sortedStudents);
+    } else {
+        // Client-side sorting
+        const sortField = document.getElementById('sortField').value;
+        const sortOrder = document.getElementById('sortOrder').value;
+
+        if (!sortField) {
+            displayStudents(currentStudents);
+            return;
+        }
+
+        const sortedStudents = [...currentStudents].sort((a, b) => {
+            let aValue = a[sortField];
+            let bValue = b[sortField];
+
+            // Handle string comparison
+            if (typeof aValue === 'string') {
+                aValue = aValue.toLowerCase();
+                bValue = bValue.toLowerCase();
+            }
+
+            if (sortOrder === 'asc') {
+                return aValue > bValue ? 1 : -1;
+            } else {
+                return aValue < bValue ? 1 : -1;
+            }
+        });
+
+        displayStudents(sortedStudents);
+    }
 }
 
 // Open edit modal
@@ -359,13 +422,13 @@ async function openEditModal(id) {
             throw new Error('Failed to load student');
         }
         const student = await response.json();
-        
+
         document.getElementById('editId').value = student.id;
         document.getElementById('editName').value = student.name;
         document.getElementById('editEmail').value = student.email;
         document.getElementById('editCourse').value = student.course;
         document.getElementById('editAge').value = student.age;
-        
+
         document.getElementById('editModal').style.display = 'block';
     } catch (error) {
         showToast('Unable to load student data. Please try again.', 'error', 'Load Error');
@@ -374,8 +437,16 @@ async function openEditModal(id) {
 
 // Close edit modal
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
+    const modal = document.getElementById('editModal');
+    if (modal) {
+        modal.style.display = 'none';
+        clearFormErrors('editStudentForm');
+        document.getElementById('editStudentForm').reset();
+    }
 }
+
+// Make function globally accessible for inline onclick
+window.closeEditModal = closeEditModal;
 
 // Update student
 async function updateStudent() {
@@ -384,15 +455,15 @@ async function updateStudent() {
     const email = document.getElementById('editEmail').value.trim();
     const course = document.getElementById('editCourse').value.trim();
     const age = document.getElementById('editAge').value;
-    
+
     // Client-side validation
     let hasError = false;
-    
+
     if (!name) {
         showFieldError('editStudentForm', 'editName', 'Name is required');
         hasError = true;
     }
-    
+
     if (!email) {
         showFieldError('editStudentForm', 'editEmail', 'Email is required');
         hasError = true;
@@ -400,29 +471,29 @@ async function updateStudent() {
         showFieldError('editStudentForm', 'editEmail', 'Please enter a valid email address');
         hasError = true;
     }
-    
+
     if (!course) {
         showFieldError('editStudentForm', 'editCourse', 'Course is required');
         hasError = true;
     }
-    
+
     if (!age || age <= 18) {
         showFieldError('editStudentForm', 'editAge', 'Age must be greater than 18');
         hasError = true;
     }
-    
+
     if (hasError) {
         showToast('Please fill in all required fields correctly', 'error', 'Validation Error');
         return;
     }
-    
+
     const student = {
         name: name,
         email: email,
         course: course,
         age: parseInt(age)
     };
-    
+
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'PUT',
@@ -431,7 +502,7 @@ async function updateStudent() {
             },
             body: JSON.stringify(student)
         });
-        
+
         if (response.ok) {
             showToast(`${name}'s information has been updated successfully!`, 'success', 'Student Updated');
             closeEditModal();
@@ -463,12 +534,12 @@ async function deleteStudent(id) {
     if (!confirm('Are you sure you want to delete this student? This action cannot be undone.')) {
         return;
     }
-    
+
     try {
         const response = await fetch(`${API_URL}/${id}`, {
             method: 'DELETE'
         });
-        
+
         if (response.ok) {
             showToast('Student has been deleted successfully', 'success', 'Student Deleted');
             loadStudents();
@@ -484,8 +555,109 @@ async function deleteStudent(id) {
     }
 }
 
+// Pagination functions
+function updatePagination(data) {
+    const paginationContainer = document.getElementById('paginationContainer');
+    if (!paginationContainer) return;
+
+    let paginationHTML = '<div class="pagination">';
+
+    // Left section - Previous button
+    paginationHTML += '<div class="pagination-left">';
+    paginationHTML += `
+        <button class="pagination-btn pagination-nav" ${!data.hasPrevious ? 'disabled' : ''} onclick="goToPage(${data.currentPage - 1})" title="Previous Page">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Previous</span>
+        </button>
+    `;
+    paginationHTML += '</div>';
+
+    // Center section - Page numbers (only show if more than 1 page)
+    paginationHTML += '<div class="pagination-center">';
+
+    if (data.totalPages > 1) {
+        const startPage = Math.max(0, data.currentPage - 2);
+        const endPage = Math.min(data.totalPages - 1, data.currentPage + 2);
+
+        if (startPage > 0) {
+            paginationHTML += `<button class="pagination-btn" onclick="goToPage(0)">1</button>`;
+            if (startPage > 1) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
+        }
+
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <button class="pagination-btn ${i === data.currentPage ? 'active' : ''}" onclick="goToPage(${i})">
+                    ${i + 1}
+                </button>
+            `;
+        }
+
+        if (endPage < data.totalPages - 1) {
+            if (endPage < data.totalPages - 2) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
+            paginationHTML += `<button class="pagination-btn" onclick="goToPage(${data.totalPages - 1})">${data.totalPages}</button>`;
+        }
+    } else {
+        // Show page info when only 1 page
+        paginationHTML += `<span class="pagination-info">Page 1 of 1</span>`;
+    }
+
+    paginationHTML += '</div>';
+
+    // Right section - Next button and page size selector
+    paginationHTML += '<div class="pagination-right">';
+    paginationHTML += `
+        <button class="pagination-btn pagination-nav" ${!data.hasNext ? 'disabled' : ''} onclick="goToPage(${data.currentPage + 1})" title="Next Page">
+            <span>Next</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+        </button>
+        <select class="page-size-selector" onchange="changePageSize(this.value)">
+            <option value="5" ${pageSize === 5 ? 'selected' : ''}>5 / page</option>
+            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
+            <option value="20" ${pageSize === 20 ? 'selected' : ''}>20 / page</option>
+            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
+        </select>
+    `;
+    paginationHTML += '</div>';
+
+    paginationHTML += '</div>';
+    paginationContainer.innerHTML = paginationHTML;
+}
+
+function goToPage(page) {
+    const name = document.getElementById('searchName').value.trim();
+    const course = document.getElementById('searchCourse').value.trim();
+
+    if (name || course) {
+        searchStudents(page);
+    } else {
+        loadStudents(page);
+    }
+}
+
+function changePageSize(newSize) {
+    pageSize = parseInt(newSize);
+    goToPage(0);
+}
+
+function togglePagination() {
+    usePagination = !usePagination;
+    const toggleBtn = document.getElementById('paginationToggle');
+    if (toggleBtn) {
+        toggleBtn.textContent = usePagination ? 'Disable Pagination' : 'Enable Pagination';
+    }
+    loadStudents(0);
+}
+
 // Close modal when clicking outside
-window.onclick = function(event) {
+window.onclick = function (event) {
     const modal = document.getElementById('editModal');
     if (event.target == modal) {
         closeEditModal();

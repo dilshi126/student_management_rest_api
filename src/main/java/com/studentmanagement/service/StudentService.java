@@ -5,6 +5,8 @@ import com.studentmanagement.exception.DuplicateEmailException;
 import com.studentmanagement.exception.ResourceNotFoundException;
 import com.studentmanagement.repository.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -58,13 +60,29 @@ public class StudentService {
     
     public List<Student> searchStudents(String name, String course) {
         if (name != null && course != null) {
-            return studentRepository.findByNameContainingIgnoreCaseOrCourseContainingIgnoreCase(name, course);
+            return studentRepository.findByNameContainingIgnoreCaseAndCourseContainingIgnoreCase(name, course);
         } else if (name != null) {
             return studentRepository.findByNameContainingIgnoreCase(name);
         } else if (course != null) {
             return studentRepository.findByCourseContainingIgnoreCase(course);
         } else {
             return studentRepository.findAll();
+        }
+    }
+    
+    public Page<Student> getStudentsPaginated(Pageable pageable) {
+        return studentRepository.findAll(pageable);
+    }
+    
+    public Page<Student> searchStudentsPaginated(String name, String course, Pageable pageable) {
+        if (name != null && course != null) {
+            return studentRepository.findByNameContainingIgnoreCaseAndCourseContainingIgnoreCase(name, course, pageable);
+        } else if (name != null) {
+            return studentRepository.findByNameContainingIgnoreCase(name, pageable);
+        } else if (course != null) {
+            return studentRepository.findByCourseContainingIgnoreCase(course, pageable);
+        } else {
+            return studentRepository.findAll(pageable);
         }
     }
 }
