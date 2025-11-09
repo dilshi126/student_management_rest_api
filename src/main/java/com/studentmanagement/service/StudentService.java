@@ -60,7 +60,7 @@ public class StudentService {
     
     public List<Student> searchStudents(String name, String course) {
         if (name != null && course != null) {
-            return studentRepository.findByNameContainingIgnoreCaseOrCourseContainingIgnoreCase(name, course);
+            return studentRepository.findByNameContainingIgnoreCaseAndCourseContainingIgnoreCase(name, course);
         } else if (name != null) {
             return studentRepository.findByNameContainingIgnoreCase(name);
         } else if (course != null) {
@@ -76,7 +76,7 @@ public class StudentService {
     
     public Page<Student> searchStudentsPaginated(String name, String course, Pageable pageable) {
         if (name != null && course != null) {
-            return studentRepository.findByNameContainingIgnoreCaseOrCourseContainingIgnoreCase(name, course, pageable);
+            return studentRepository.findByNameContainingIgnoreCaseAndCourseContainingIgnoreCase(name, course, pageable);
         } else if (name != null) {
             return studentRepository.findByNameContainingIgnoreCase(name, pageable);
         } else if (course != null) {
