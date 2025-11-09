@@ -9,9 +9,18 @@ A simple Student Management REST API built with Spring Boot 3+, Spring Data JPA,
 - Get Student By ID (GET)
 - Update Student (PUT)
 - Delete Student (DELETE)
-- Field validation (email format, age > 18, not null)
+- **Pagination Support** (Backend & Frontend)
+  - Server-side pagination with Spring Data
+  - Client-side pagination toggle
+  - Configurable page size (5, 10, 20, 50)
+  - Page navigation with Previous/Next buttons
+  - Direct page number selection
+- Search & Filter with pagination
+- Sorting with pagination support
+- Field validation (email format, age > 18, not null, unique email)
 - Service Layer architecture
 - Global Exception Handling
+- Modern responsive UI with toast notifications
 - Swagger UI documentation
 
 ## Technologies Used
@@ -58,6 +67,10 @@ mvn spring-boot:run
 The application will start on `http://localhost:8080`
 
 ## API Endpoints
+
+### Pagination Support
+
+The API now supports both paginated and non-paginated endpoints for better performance with large datasets.
 
 ### 1. Add Student
 **POST** `/api/students`
@@ -114,6 +127,41 @@ Response: `200 OK` or `404 NOT FOUND`
 **DELETE** `/api/students/{id}`
 
 Response: `204 NO CONTENT` or `404 NOT FOUND`
+
+### 6. Get Students (Paginated)
+**GET** `/api/students/paginated?page=0&size=10&sortBy=id&sortDir=asc`
+
+Query Parameters:
+- `page` (optional, default: 0) - Page number (0-indexed)
+- `size` (optional, default: 10) - Number of items per page
+- `sortBy` (optional, default: id) - Field to sort by (id, name, email, course, age)
+- `sortDir` (optional, default: asc) - Sort direction (asc or desc)
+
+Response: `200 OK`
+```json
+{
+  "students": [...],
+  "currentPage": 0,
+  "totalItems": 50,
+  "totalPages": 5,
+  "pageSize": 10,
+  "hasNext": true,
+  "hasPrevious": false
+}
+```
+
+### 7. Search Students (Paginated)
+**GET** `/api/students/paginated/search?name=John&course=CS&page=0&size=10&sortBy=name&sortDir=asc`
+
+Query Parameters:
+- `name` (optional) - Search by name (case-insensitive, partial match)
+- `course` (optional) - Search by course (case-insensitive, partial match)
+- `page` (optional, default: 0) - Page number
+- `size` (optional, default: 10) - Items per page
+- `sortBy` (optional, default: id) - Sort field
+- `sortDir` (optional, default: asc) - Sort direction
+
+Response: Same as paginated endpoint
 
 ## Database Setup
 

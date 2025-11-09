@@ -3,7 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Management System</title>
+    <title>Student Management System - University of Sri Jayewardenepura</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -15,6 +17,18 @@
                 <div class="university-name">University of Sri Jayewardenepura</div>
                 <div class="faculty-name">Faculty of Technology</div>
                 <div class="department-name">Department of Information Communication Technology</div>
+            </div>
+            <div class="header-actions">
+                <a href="/swagger-ui.html" target="_blank" class="swagger-btn" title="Open API Documentation">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    <span>API Docs</span>
+                </a>
             </div>
             <div class="student-info">
                 <div class="student-details">
@@ -70,7 +84,9 @@
         <div class="card">
             <div class="list-header">
                 <h2>Students List</h2>
-                <div class="student-count" id="studentCount">0 students</div>
+                <div class="header-right">
+                    <div class="student-count" id="studentCount">0 students</div>
+                </div>
             </div>
             
             <!-- Search and Filter Controls -->
@@ -99,12 +115,14 @@
             </div>
             
             <div id="studentsList"></div>
+            
+            <!-- Pagination -->
+            <div id="paginationContainer"></div>
         </div>
 
         <!-- Edit Modal -->
         <div id="editModal" class="modal">
             <div class="modal-content">
-                <span class="close" onclick="closeEditModal()">&times;</span>
                 <h2>Edit Student</h2>
                 <form id="editStudentForm">
                     <input type="hidden" id="editId">
@@ -133,6 +151,6 @@
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=3.0"></script>
 </body>
 </html>
