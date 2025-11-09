@@ -559,62 +559,72 @@ function updatePagination(data) {
     const paginationContainer = document.getElementById('paginationContainer');
     if (!paginationContainer) return;
     
-    if (data.totalPages <= 1) {
-        paginationContainer.innerHTML = '';
-        return;
-    }
-    
     let paginationHTML = '<div class="pagination">';
     
-    // Previous button
+    // Left section - Previous button
+    paginationHTML += '<div class="pagination-left">';
     paginationHTML += `
-        <button class="pagination-btn" ${!data.hasPrevious ? 'disabled' : ''} onclick="goToPage(${data.currentPage - 1})">
-            ← Previous
+        <button class="pagination-btn pagination-nav" ${!data.hasPrevious ? 'disabled' : ''} onclick="goToPage(${data.currentPage - 1})" title="Previous Page">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+            <span>Previous</span>
         </button>
     `;
+    paginationHTML += '</div>';
     
-    // Page numbers
-    const startPage = Math.max(0, data.currentPage - 2);
-    const endPage = Math.min(data.totalPages - 1, data.currentPage + 2);
+    // Center section - Page numbers (only show if more than 1 page)
+    paginationHTML += '<div class="pagination-center">';
     
-    if (startPage > 0) {
-        paginationHTML += `<button class="pagination-btn" onclick="goToPage(0)">1</button>`;
-        if (startPage > 1) {
-            paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+    if (data.totalPages > 1) {
+        const startPage = Math.max(0, data.currentPage - 2);
+        const endPage = Math.min(data.totalPages - 1, data.currentPage + 2);
+        
+        if (startPage > 0) {
+            paginationHTML += `<button class="pagination-btn" onclick="goToPage(0)">1</button>`;
+            if (startPage > 1) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
         }
-    }
-    
-    for (let i = startPage; i <= endPage; i++) {
-        paginationHTML += `
-            <button class="pagination-btn ${i === data.currentPage ? 'active' : ''}" onclick="goToPage(${i})">
-                ${i + 1}
-            </button>
-        `;
-    }
-    
-    if (endPage < data.totalPages - 1) {
-        if (endPage < data.totalPages - 2) {
-            paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+        
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <button class="pagination-btn ${i === data.currentPage ? 'active' : ''}" onclick="goToPage(${i})">
+                    ${i + 1}
+                </button>
+            `;
         }
-        paginationHTML += `<button class="pagination-btn" onclick="goToPage(${data.totalPages - 1})">${data.totalPages}</button>`;
+        
+        if (endPage < data.totalPages - 1) {
+            if (endPage < data.totalPages - 2) {
+                paginationHTML += `<span class="pagination-ellipsis">...</span>`;
+            }
+            paginationHTML += `<button class="pagination-btn" onclick="goToPage(${data.totalPages - 1})">${data.totalPages}</button>`;
+        }
+    } else {
+        // Show page info when only 1 page
+        paginationHTML += `<span class="pagination-info">Page 1 of 1</span>`;
     }
     
-    // Next button
+    paginationHTML += '</div>';
+    
+    // Right section - Next button and page size selector
+    paginationHTML += '<div class="pagination-right">';
     paginationHTML += `
-        <button class="pagination-btn" ${!data.hasNext ? 'disabled' : ''} onclick="goToPage(${data.currentPage + 1})">
-            Next →
+        <button class="pagination-btn pagination-nav" ${!data.hasNext ? 'disabled' : ''} onclick="goToPage(${data.currentPage + 1})" title="Next Page">
+            <span>Next</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
         </button>
-    `;
-    
-    // Page size selector
-    paginationHTML += `
         <select class="page-size-selector" onchange="changePageSize(this.value)">
-            <option value="5" ${pageSize === 5 ? 'selected' : ''}>5 per page</option>
-            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 per page</option>
-            <option value="20" ${pageSize === 20 ? 'selected' : ''}>20 per page</option>
-            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 per page</option>
+            <option value="5" ${pageSize === 5 ? 'selected' : ''}>5 / page</option>
+            <option value="10" ${pageSize === 10 ? 'selected' : ''}>10 / page</option>
+            <option value="20" ${pageSize === 20 ? 'selected' : ''}>20 / page</option>
+            <option value="50" ${pageSize === 50 ? 'selected' : ''}>50 / page</option>
         </select>
     `;
+    paginationHTML += '</div>';
     
     paginationHTML += '</div>';
     paginationContainer.innerHTML = paginationHTML;
