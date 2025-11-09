@@ -374,8 +374,16 @@ async function openEditModal(id) {
 
 // Close edit modal
 function closeEditModal() {
-    document.getElementById('editModal').style.display = 'none';
+    const modal = document.getElementById('editModal');
+    if (modal) {
+        modal.style.display = 'none';
+        clearFormErrors('editStudentForm');
+        document.getElementById('editStudentForm').reset();
+    }
 }
+
+// Make function globally accessible for inline onclick
+window.closeEditModal = closeEditModal;
 
 // Update student
 async function updateStudent() {
