@@ -1,4 +1,5 @@
-const API_URL = 'http://localhost:8080/api/students';
+// Use relative URL so it works with both localhost and ngrok
+const API_URL = '/api/students';
 let currentStudents = [];
 let currentPage = 0;
 let pageSize = 10;
